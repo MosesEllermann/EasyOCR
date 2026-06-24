@@ -1,0 +1,9 @@
+<resources>
+    <style name="Theme.EasyOCR" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:colorAccent">#14B8A6</item>
+    </style>
+</resources>
