@@ -4,6 +4,12 @@ EasyOCR is an open-source, privacy-first Android image editor for copying text f
 
 [![Get it on GitHub](https://img.shields.io/badge/Get%20it%20on-GitHub-181717?logo=github)](https://github.com/MosesEllermann/EasyOCR/releases/latest)
 
+## Why EasyOCR Exists
+
+I came from a phone setup where copying text from screenshots with Gemini/Google tools was built in and effortless. After moving to GrapheneOS, I missed that simple workflow, but I did not want to go back to Google services, cloud processing, or account-tied features just to copy text from an image.
+
+EasyOCR is my open-source alternative: a small Android editor that opens screenshots, runs OCR locally, and lets you copy text without uploading the image anywhere.
+
 ## What It Does
 
 - Opens screenshots from Android's **Edit with...** flow.
@@ -86,6 +92,12 @@ easyocr.release.keyPassword=...
 ## Notes
 
 Android's screenshot preview/editor chooser differs a little by OS build and OEM. The important pieces for GrapheneOS are the `ACTION_EDIT` image intent filter, `image/*` MIME support, and content URI read handling, all of which are included here.
+
+## Contributing
+
+Contributions are very welcome. Ideas, bug reports, GrapheneOS/device testing notes, translations, UX improvements, OCR improvements, and pull requests all help make EasyOCR better.
+
+If you want to work on something larger, opening an issue first is helpful so the direction can be discussed before you spend time on it.
 
 ## License
 
