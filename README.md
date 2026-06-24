@@ -2,7 +2,11 @@
 
 EasyOCR is an open-source, privacy-first Android image editor for copying text from screenshots. It is designed to appear in Android's screenshot/image editor flow: take a screenshot, tap the preview, choose EasyOCR, and select text directly on the image.
 
-[![Get it on GitHub](https://img.shields.io/badge/Get%20it%20on-GitHub-181717?logo=github)](https://github.com/MosesEllermann/EasyOCR/releases/latest)
+<p align="center">
+  <a href="https://github.com/MosesEllermann/EasyOCR/releases/latest">
+    <img src="https://img.shields.io/badge/Download%20APK-Latest%20GitHub%20Release-238636?style=for-the-badge&logo=github&logoColor=white" alt="Download APK from the latest GitHub release">
+  </a>
+</p>
 
 ## Why EasyOCR Exists
 
