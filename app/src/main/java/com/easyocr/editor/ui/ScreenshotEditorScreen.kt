@@ -23,6 +23,8 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Redo
+import androidx.compose.material.icons.automirrored.outlined.Undo
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.ColorLens
@@ -102,6 +104,7 @@ fun ScreenshotEditorScreen(
     val rotation = remember { Animatable(0f) }
     val previewScale = remember { Animatable(1f) }
     val drawingStrokes = remember { mutableStateListOf<DrawingStroke>() }
+    val undoneDrawingStrokes = remember { mutableStateListOf<DrawingStroke>() }
     var showOcrSheet by remember { mutableStateOf(false) }
     var showPrivacySheet by remember { mutableStateOf(false) }
     var transform by remember { mutableStateOf(ImageTransform()) }
@@ -116,6 +119,7 @@ fun ScreenshotEditorScreen(
         previewScale.snapTo(0.96f)
         previewScale.animateTo(1f, tween(durationMillis = 220, easing = FastOutSlowInEasing))
         drawingStrokes.clear()
+        undoneDrawingStrokes.clear()
         currentStroke = null
     }
 
@@ -243,7 +247,10 @@ fun ScreenshotEditorScreen(
                         )
                     },
                     onDrawEnd = {
-                        currentStroke?.takeIf { it.points.size > 1 }?.let(drawingStrokes::add)
+                        currentStroke?.takeIf { it.points.size > 1 }?.let {
+                            drawingStrokes.add(it)
+                            undoneDrawingStrokes.clear()
+                        }
                         currentStroke = null
                     },
                     modifier = Modifier
@@ -267,6 +274,8 @@ fun ScreenshotEditorScreen(
                 cropState = cropState,
                 penSettings = penSettings,
                 hasDrawing = drawingStrokes.isNotEmpty() || currentStroke != null,
+                canUndoDrawing = drawingStrokes.isNotEmpty(),
+                canRedoDrawing = undoneDrawingStrokes.isNotEmpty(),
                 onCrop = ::startCrop,
                 onDraw = ::startDrawing,
                 onRotateLeft = { rotateAnimated(-1f, onRotateLeft) },
@@ -294,15 +303,27 @@ fun ScreenshotEditorScreen(
                     cropPreview = false
                 },
                 onPenSettings = { penSettings = it },
+                onUndoDrawing = {
+                    if (drawingStrokes.isNotEmpty()) {
+                        undoneDrawingStrokes.add(drawingStrokes.removeAt(drawingStrokes.lastIndex))
+                    }
+                },
+                onRedoDrawing = {
+                    if (undoneDrawingStrokes.isNotEmpty()) {
+                        drawingStrokes.add(undoneDrawingStrokes.removeAt(undoneDrawingStrokes.lastIndex))
+                    }
+                },
                 onApplyDrawing = {
                     val strokes = drawingStrokes.toList()
                     onApplyDrawing(strokes)
                     drawingStrokes.clear()
+                    undoneDrawingStrokes.clear()
                     currentStroke = null
                     activeTool = EditorTool.View
                 },
                 onCancelDrawing = {
                     drawingStrokes.clear()
+                    undoneDrawingStrokes.clear()
                     currentStroke = null
                     activeTool = EditorTool.View
                 },
@@ -379,6 +400,8 @@ private fun EditorFloatingControls(
     cropState: CropState?,
     penSettings: PenSettings,
     hasDrawing: Boolean,
+    canUndoDrawing: Boolean,
+    canRedoDrawing: Boolean,
     onCrop: () -> Unit,
     onDraw: () -> Unit,
     onRotateLeft: () -> Unit,
@@ -390,6 +413,8 @@ private fun EditorFloatingControls(
     onApplyCrop: () -> Unit,
     onCancelCrop: () -> Unit,
     onPenSettings: (PenSettings) -> Unit,
+    onUndoDrawing: () -> Unit,
+    onRedoDrawing: () -> Unit,
     onApplyDrawing: () -> Unit,
     onCancelDrawing: () -> Unit,
     modifier: Modifier = Modifier,
@@ -425,7 +450,11 @@ private fun EditorFloatingControls(
                 DrawControlPanel(
                     penSettings = penSettings,
                     hasDrawing = hasDrawing,
+                    canUndo = canUndoDrawing,
+                    canRedo = canRedoDrawing,
                     onPenSettings = onPenSettings,
+                    onUndo = onUndoDrawing,
+                    onRedo = onRedoDrawing,
                     onApply = onApplyDrawing,
                     onCancel = onCancelDrawing,
                 )
@@ -561,7 +590,11 @@ private fun CropControlPanel(
 private fun DrawControlPanel(
     penSettings: PenSettings,
     hasDrawing: Boolean,
+    canUndo: Boolean,
+    canRedo: Boolean,
     onPenSettings: (PenSettings) -> Unit,
+    onUndo: () -> Unit,
+    onRedo: () -> Unit,
     onApply: () -> Unit,
     onCancel: () -> Unit,
 ) {
@@ -593,6 +626,12 @@ private fun DrawControlPanel(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
+            CompactIconButton(onClick = onUndo, enabled = canUndo) {
+                Icon(Icons.AutoMirrored.Outlined.Undo, contentDescription = "Undo drawing")
+            }
+            CompactIconButton(onClick = onRedo, enabled = canRedo) {
+                Icon(Icons.AutoMirrored.Outlined.Redo, contentDescription = "Redo drawing")
+            }
             Text("Size")
             Slider(
                 value = penSettings.width,
@@ -600,6 +639,12 @@ private fun DrawControlPanel(
                 valueRange = 3f..36f,
                 modifier = Modifier.weight(1f),
             )
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             TextButton(onClick = onCancel) {
                 Icon(Icons.Outlined.Close, contentDescription = null)
                 Text("Cancel")
