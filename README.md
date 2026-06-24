@@ -1,33 +1,18 @@
 # EasyOCR
 
-EasyOCR is a lightweight, privacy-first Android image editor for screenshot text copying. It is meant to appear in Android's image edit flow: take a screenshot, tap the screenshot preview, choose EasyOCR, then tap detected text blocks to copy them.
+EasyOCR is an open-source, privacy-first Android image editor for copying text from screenshots. It is designed to appear in Android's screenshot/image editor flow: take a screenshot, tap the preview, choose EasyOCR, and select text directly on the image.
 
-## Current Architecture
+[![Get it on GitHub](https://img.shields.io/badge/Get%20it%20on-GitHub-181717?logo=github)](https://github.com/MosesEllermann/EasyOCR/releases/latest)
 
-- `MainActivity` receives Android image intents and hosts the Compose editor.
-- `ImageEditIntentHandler` extracts `content://` image URIs from `ACTION_EDIT`, `ACTION_VIEW`, and `ACTION_SEND`.
-- `ImageLoader` decodes content URIs, downsamples very large images, and applies EXIF rotation.
-- `OcrEngine` abstracts OCR; `MlKitOcrEngine` implements bundled, local ML Kit Text Recognition v2.
-- `OcrRepository` caches OCR results for the current bitmap and language during the session.
-- `ImageCanvasWithOcrOverlay` displays the image, handles pinch/pan, and maps taps to OCR blocks.
-- `SaveImageUseCase` writes copies through MediaStore and shares through a `FileProvider`.
+## What It Does
 
-## OCR Engine Choice
-
-EasyOCR uses ML Kit Text Recognition v2 with the bundled Latin recognizer dependency:
-
-```kotlin
-implementation("com.google.mlkit:text-recognition:16.0.1")
-```
-
-This is the practical choice for GrapheneOS because OCR runs on-device and the model is bundled with the app instead of being downloaded by Google Play Services at runtime. It does not require a Google account, cloud processing, or the `INTERNET` permission.
-
-Tradeoffs:
-
-- ML Kit's bundled recognizer increases APK size compared with Play Services delivery.
-- The Latin recognizer covers English and German well, but the language selector is a recognition hint in this first version rather than separate OCR models.
-- Tesseract is fully open source and very offline-friendly, but Android packaging and language data management add more size and maintenance burden.
-- PaddleOCR can be strong, but Android integration is heavier for this focused screenshot-editor workflow.
+- Opens screenshots from Android's **Edit with...** flow.
+- Runs OCR locally on your device.
+- Lets you select and copy detected text on top of the image.
+- Supports pinch-to-zoom and pan.
+- Includes crop, document perspective crop, rotate, drawing, save copy, and share tools.
+- Works offline after installation.
+- Built for privacy-conscious Android setups, including GrapheneOS.
 
 ## Privacy
 
@@ -43,15 +28,32 @@ EasyOCR:
 
 The manifest only requests legacy `WRITE_EXTERNAL_STORAGE` for Android 8-9 save-copy support. Android 10 and newer use scoped storage through MediaStore.
 
-## Intent Support
+## OCR
 
-The manifest registers:
+EasyOCR uses ML Kit Text Recognition v2 with the bundled Latin recognizer:
 
-- `android.intent.action.EDIT` for `image/*`, `image/png`, `image/jpeg`, and `image/webp`
-- `android.intent.action.VIEW` for the same image types
-- `android.intent.action.SEND` for `image/*`
+```kotlin
+implementation("com.google.mlkit:text-recognition:16.0.1")
+```
 
-Incoming `content://` URIs are opened through `ContentResolver`. Persistable read permission is taken when the provider grants it.
+The recognizer runs on-device and is bundled with the app, so it does not need a Google account, cloud processing, runtime model download, or the `INTERNET` permission.
+
+Notes:
+
+- English and German are the default target languages.
+- The bundled recognizer increases APK size compared with Play Services delivery.
+- Tesseract and PaddleOCR are possible alternatives, but ML Kit is currently the most practical fit for this lightweight screenshot-editor workflow.
+
+## Android Integration
+
+EasyOCR registers as an image editor/viewer for:
+
+- `android.intent.action.EDIT`
+- `android.intent.action.VIEW`
+- `android.intent.action.SEND`
+- `image/*`, `image/png`, `image/jpeg`, and `image/webp`
+
+Incoming `content://` images are opened through Android's `ContentResolver`. Persistable read permission is taken when the provider grants it.
 
 ## Build
 
@@ -61,10 +63,16 @@ Requirements:
 - JDK 17
 - Gradle 9.4.1 or newer when building outside Android Studio
 
-Open this folder in Android Studio and run the `app` configuration, or build from a terminal with an installed Gradle:
+Build a debug APK:
 
 ```bash
-gradle assembleDebug
+./gradlew assembleDebug
+```
+
+Run tests and build a release APK:
+
+```bash
+./gradlew test assembleRelease
 ```
 
 For a local signed release build, configure a private keystore through `local.properties`:
@@ -74,12 +82,6 @@ easyocr.release.storeFile=easyocr-release.jks
 easyocr.release.storePassword=...
 easyocr.release.keyAlias=easyocr
 easyocr.release.keyPassword=...
-```
-
-Then run:
-
-```bash
-gradle test assembleRelease
 ```
 ## Notes
 
