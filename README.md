@@ -20,6 +20,14 @@ EasyOCR is my open-source alternative: a small Android editor that opens screens
 - Works offline after installation.
 - Built for privacy-conscious Android setups, including GrapheneOS.
 
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/copytext.png" width="260" alt="Copy detected text in EasyOCR">
+  <img src="docs/screenshots/crop.png" width="260" alt="Crop a screenshot in EasyOCR">
+  <img src="docs/screenshots/writeon.png" width="260" alt="Draw on an image in EasyOCR">
+</p>
+
 ## Privacy
 
 OCR runs locally on your device. Images are not uploaded.
