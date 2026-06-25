@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -37,6 +38,8 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -295,6 +298,8 @@ private fun SelectableOcrTextLayer(
     if (selectableLines.isEmpty() || viewportSize.isEmpty) return
 
     val density = LocalDensity.current
+    val textMeasurer = rememberTextMeasurer()
+    val selectionTextStyle = LocalTextStyle.current
     SelectionContainer {
         Box(Modifier.fillMaxSize()) {
             selectableLines.forEach { line ->
@@ -307,11 +312,27 @@ private fun SelectableOcrTextLayer(
                 if (rect.width <= 2f || rect.height <= 2f) return@forEach
 
                 val widthDp = with(density) { rect.width.toDp() }
-                val heightDp = with(density) { rect.height.toDp() }
+                val baseFontSize = 24.sp
+                val measuredWidth = textMeasurer.measure(
+                    text = line.text,
+                    style = selectionTextStyle.merge(
+                        TextStyle(
+                            fontSize = baseFontSize,
+                            lineHeight = baseFontSize,
+                        ),
+                    ),
+                    maxLines = 1,
+                    softWrap = false,
+                ).size.width.coerceAtLeast(1)
+                val fontSizePx = with(density) {
+                    val baseFontSizePx = baseFontSize.toPx()
+                    val widthBasedSize = baseFontSizePx * (rect.width * 1.04f) / measuredWidth
+                    widthBasedSize.coerceIn(6f, rect.height * 1.45f)
+                }
+                val heightPx = max(rect.height, fontSizePx * 1.28f)
+                val heightDp = with(density) { heightPx.toDp() }
                 val fontSize = with(density) {
-                    val heightBasedSize = rect.height * 0.72f
-                    val widthBasedSize = rect.width / max(1f, line.text.length * 0.52f)
-                    min(heightBasedSize, widthBasedSize).coerceIn(8f, 30f).toSp()
+                    fontSizePx.toSp()
                 }
 
                 Text(
@@ -323,7 +344,10 @@ private fun SelectableOcrTextLayer(
                     softWrap = false,
                     modifier = Modifier
                         .absoluteOffset {
-                            IntOffset(rect.left.roundToInt(), rect.top.roundToInt())
+                            IntOffset(
+                                rect.left.roundToInt(),
+                                (rect.top - (heightPx - rect.height) / 2f).roundToInt(),
+                            )
                         }
                         .size(width = widthDp, height = heightDp),
                 )
