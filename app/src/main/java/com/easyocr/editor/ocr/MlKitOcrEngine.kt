@@ -30,6 +30,18 @@ class MlKitOcrEngine : OcrEngine {
                     right = box.right.toFloat(),
                     bottom = box.bottom.toFloat(),
                 ),
+                lines = block.lines.mapNotNull { line ->
+                    val lineBox = line.boundingBox ?: return@mapNotNull null
+                    RecognizedTextLine(
+                        text = line.text.trim(),
+                        boundingBox = RectF2(
+                            left = lineBox.left.toFloat(),
+                            top = lineBox.top.toFloat(),
+                            right = lineBox.right.toFloat(),
+                            bottom = lineBox.bottom.toFloat(),
+                        ),
+                    )
+                }.filter { it.text.isNotBlank() },
             )
         }.filter { it.text.isNotBlank() }
 
