@@ -11,6 +11,13 @@ object OcrResultMapper {
                 id = "block-$index",
                 text = text,
                 boundingBox = block.boundingBox,
+                lines = block.lines.mapIndexed { lineIndex, line ->
+                    OcrTextLine(
+                        id = "block-$index-line-$lineIndex",
+                        text = line.text,
+                        boundingBox = line.boundingBox,
+                    )
+                },
             )
         }
 
@@ -22,6 +29,12 @@ object OcrResultMapper {
 }
 
 data class RecognizedTextBlock(
+    val text: String,
+    val boundingBox: RectF2,
+    val lines: List<RecognizedTextLine> = emptyList(),
+)
+
+data class RecognizedTextLine(
     val text: String,
     val boundingBox: RectF2,
 )

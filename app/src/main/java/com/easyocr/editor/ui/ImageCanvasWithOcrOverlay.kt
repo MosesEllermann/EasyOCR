@@ -48,6 +48,7 @@ import com.easyocr.editor.geometry.RectF2
 import com.easyocr.editor.geometry.SizeF2
 import com.easyocr.editor.image.BitmapEditor
 import com.easyocr.editor.ocr.OcrResult
+import com.easyocr.editor.ocr.OcrTextLine
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -280,14 +281,25 @@ private fun SelectableOcrTextLayer(
     transform: ImageTransform,
 ) {
     val blocks = ocrResult?.blocks.orEmpty()
-    if (blocks.isEmpty() || viewportSize.isEmpty) return
+    val selectableLines = blocks.flatMap { block ->
+        block.lines.ifEmpty {
+            listOf(
+                OcrTextLine(
+                    id = "${block.id}-fallback",
+                    text = block.text,
+                    boundingBox = block.boundingBox,
+                ),
+            )
+        }
+    }
+    if (selectableLines.isEmpty() || viewportSize.isEmpty) return
 
     val density = LocalDensity.current
     SelectionContainer {
         Box(Modifier.fillMaxSize()) {
-            blocks.forEach { block ->
+            selectableLines.forEach { line ->
                 val rect = OcrCoordinateMapper.imageToScreenRect(
-                    imageRect = block.boundingBox,
+                    imageRect = line.boundingBox,
                     imageSize = imageSize,
                     viewportSize = viewportSize,
                     transform = transform,
@@ -297,14 +309,18 @@ private fun SelectableOcrTextLayer(
                 val widthDp = with(density) { rect.width.toDp() }
                 val heightDp = with(density) { rect.height.toDp() }
                 val fontSize = with(density) {
-                    (rect.height * 0.72f).coerceIn(8f, 30f).toSp()
+                    val heightBasedSize = rect.height * 0.72f
+                    val widthBasedSize = rect.width / max(1f, line.text.length * 0.52f)
+                    min(heightBasedSize, widthBasedSize).coerceIn(8f, 30f).toSp()
                 }
 
                 Text(
-                    text = block.text,
+                    text = line.text,
                     color = Color.Transparent,
                     fontSize = fontSize,
                     lineHeight = fontSize,
+                    maxLines = 1,
+                    softWrap = false,
                     modifier = Modifier
                         .absoluteOffset {
                             IntOffset(rect.left.roundToInt(), rect.top.roundToInt())
