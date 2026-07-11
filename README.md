@@ -110,6 +110,7 @@ easyocr.release.storePassword=...
 easyocr.release.keyAlias=easyocr
 easyocr.release.keyPassword=...
 ```
+
 ## Notes
 
 Android's screenshot preview/editor chooser differs a little by OS build and OEM. The important pieces for GrapheneOS are the `ACTION_EDIT` image intent filter, `image/*` MIME support, and content URI read handling, all of which are included here.
