@@ -39,12 +39,21 @@ OCR runs locally on your device. Images are not uploaded.
 EasyOCR:
 
 - does not request `INTERNET`
+- explicitly removes transitive `INTERNET` and `ACCESS_NETWORK_STATE` permissions from the final merged APK manifest
 - does not include analytics
 - does not include crash reporting
 - does not include ads
 - does not overwrite the original screenshot
 
 The manifest only requests legacy `WRITE_EXTERNAL_STORAGE` for Android 8-9 save-copy support. Android 10 and newer use scoped storage through MediaStore.
+
+You can verify the released APK permissions with:
+
+```bash
+aapt dump permissions EasyOCR-1.1.1.apk
+```
+
+The output should not contain `android.permission.INTERNET` or `android.permission.ACCESS_NETWORK_STATE`.
 
 ## OCR
 
