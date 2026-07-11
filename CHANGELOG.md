@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.2
+
+- Updated the app icon.
+
 ## 1.0.0
 
 - Initial public release.
